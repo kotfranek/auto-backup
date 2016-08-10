@@ -10,7 +10,6 @@
 # Use 'rsync' for data transfering.
 #
 
-
 ### Constant definitions ######################################################
 
 # Script name
@@ -26,8 +25,15 @@ readonly SCRIPT_VERSION="0.1.0"
 readonly EXIT_SUCCESS=0 # successfull program execution
 readonly EXIT_ERR_OPT=1 # invalid command line options
 
+# Error message: wrong arguments
+readonly MSG_ERR_ARGS="Wrong or no arguments provided.
+Execute '${SCRIPT_NAME} -h' to get the details."
+
+# Error message: input file does not exist
+MSG_ERR_INPUT="Input file '${GLOB_INPUT_FILE}' does not exist or is not readable."
+
 # Usage/help message
-readonly HELP_MESSAGE="USAGE:
+readonly MSG_USAGE="USAGE:
 
 ${SCRIPT_NAME} -i <list_file> -o <output_dir> [-v]
 
@@ -39,7 +45,6 @@ OPTIONS:
 REMARKS:
 The input file contains the list of items to backup.
 Only one item per line.
-
 "
 ### Global Variables ##########################################################
 
@@ -50,10 +55,21 @@ GLOB_OUTPUT=""
 
 ### Functions #################################################################
 
+exitSuccess()
+{
+    exit ${EXIT_SUCCESS}
+}
+
+# Exit with the given Error Code
+exitError()
+{
+    exit ${1}
+}
+
 # Read the command line options and set the global variables
 # ext   INPUT_FILE
 # ext   OUTPUT_LOCATION
-getOptions() 
+getOptions()
 {
     while [[ ${#} > 0 ]]; do
         case "${1}" in
@@ -68,6 +84,7 @@ getOptions()
             shift
             ;;
         -v|--verbosity)
+            GLOB_VERBOSE=1
             shift
             ;;
         -h|--help)
@@ -75,7 +92,8 @@ getOptions()
             exitSuccess
             ;;
         *)
-            exitOptionsError
+            printError "${MSG_ERR_ARGS}"
+            exitError ${EXIT_ERR_OPT}
             ;;
         esac
     done
@@ -84,20 +102,35 @@ getOptions()
 # Display the usage info
 printHelp()
 {
-    printf "%s\n" "${HELP_MESSAGE}"
+    printf "%s\n" "${MSG_USAGE}"
 }
 
+# Display the most basic information
 printScriptInfo()
 {
     printf "%s v%s\n" "${SCRIPT_NAME_FULL}" "${SCRIPT_VERSION}"
 }
 
+# Print the error message tp stderr
+printError()
+{
+    printf >&2 "ERROR: %s\n" "${1}"
+}
+
+# Performs a basic check after options were parsed
+checkParams()
+{
+    if [ ! -e "${GLOB_INPUT_FILE}" ]; then
+        printError "Input file '${GLOB_INPUT_FILE}' does not exist or is not readable."
+    fi
+}
 
 # Script body
 main()
 {
     printScriptInfo
-    printHelp
+    getOptions "${@}"
+    checkParams
 }
 
 # Call main function with all CLI arguments
