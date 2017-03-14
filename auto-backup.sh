@@ -120,7 +120,9 @@ printError()
 # Performs a basic check after options were parsed
 checkParams()
 {
-    if [ ! -e "${GLOB_INPUT_FILE}" ]; then
+    if [ -z "${GLOB_INPUT_FILE}" ]; then
+        printError "Input file is missing (-i|--input)."
+    elif [ ! -e "${GLOB_INPUT_FILE}" ]; then
         printError "Input file '${GLOB_INPUT_FILE}' does not exist or is not readable."
     fi
 }
