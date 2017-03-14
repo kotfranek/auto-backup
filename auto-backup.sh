@@ -56,6 +56,7 @@ GLOB_VERBOSE=0
 GLOB_INPUT_FILE=""
 GLOB_OUTPUT=""
 GLOB_GO=""
+declare -a GLOB_INPUT_LIST
 
 ### Functions #################################################################
 
@@ -142,6 +143,32 @@ checkParams()
     fi
 }
 
+populateInputArray()
+{
+    OLD_IFS="$IFS"
+    IFS=$'\n' GLOB_INPUT_LIST=($(<"${GLOB_INPUT_FILE}"))
+    IFS="$OLD_IFS"
+}
+
+doItemBackup()
+{
+    ITEM="${1}"
+    echo "Will backup: ${ITEM}"
+}
+
+doBackup()
+{
+    if [ 0 != ${#GLOB_INPUT_LIST[@]} ]; then
+        printToConsole "Perform a backup to "${GLOB_OUTPUT}""
+        for i in "${GLOB_INPUT_LIST[@]}"
+        do
+            doItemBackup "${i}"
+        done
+    else
+        printError "The input list is empty. Check '${GLOB_INPUT_FILE}' content"
+    fi
+}
+
 # Script body
 main()
 {
@@ -152,7 +179,8 @@ main()
         printHelp
         exitError ${EXIT_ERR_OPT}
     else
-        printToConsole "Perform a backup to "${GLOB_OUTPUT}""
+        populateInputArray
+        doBackup
     fi
 }
 
