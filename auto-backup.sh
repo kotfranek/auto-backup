@@ -21,6 +21,9 @@ readonly SCRIPT_NAME_FULL="Auto Backup"
 # Version
 readonly SCRIPT_VERSION="0.1.0"
 
+# rsync binary
+readonly RSYNC_BIN="rsync"
+
 # exit status values
 readonly EXIT_SUCCESS=0 # successfull program execution
 readonly EXIT_ERR_OPT=1 # invalid command line options
@@ -52,6 +55,7 @@ Only one item per line.
 GLOB_VERBOSE=0
 GLOB_INPUT_FILE=""
 GLOB_OUTPUT=""
+GLOB_GO=""
 
 ### Functions #################################################################
 
@@ -99,10 +103,15 @@ getOptions()
     done
 }
 
+printToConsole()
+{
+    printf "%s\n" "${1}"
+}
+
 # Display the usage info
 printHelp()
 {
-    printf "%s\n" "${MSG_USAGE}"
+    printToConsole "${MSG_USAGE}"
 }
 
 # Display the most basic information
@@ -121,9 +130,15 @@ printError()
 checkParams()
 {
     if [ -z "${GLOB_INPUT_FILE}" ]; then
-        printError "Input file is missing (-i|--input)."
+        printError "Input file is missing."
     elif [ ! -e "${GLOB_INPUT_FILE}" ]; then
         printError "Input file '${GLOB_INPUT_FILE}' does not exist or is not readable."
+    elif [ -z "${GLOB_OUTPUT}" ]; then
+        printError "Output directory is missing."
+    elif [ ! -d "${GLOB_OUTPUT}" ] || [ ! -w "${GLOB_OUTPUT}" ]; then
+        printError "Output directory '${GLOB_OUTPUT}' does not exist or is not writable."
+    else
+        GLOB_GO="yes"
     fi
 }
 
@@ -133,6 +148,12 @@ main()
     printScriptInfo
     getOptions "${@}"
     checkParams
+    if [ -z "${GLOB_GO}" ]; then
+        printHelp
+        exitError ${EXIT_ERR_OPT}
+    else
+        printToConsole "Perform a backup to "${GLOB_OUTPUT}""
+    fi
 }
 
 # Call main function with all CLI arguments
