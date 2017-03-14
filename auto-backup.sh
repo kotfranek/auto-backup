@@ -153,7 +153,9 @@ populateInputArray()
 doItemBackup()
 {
     ITEM="${1}"
-    echo "Will backup: ${ITEM}"
+    echo "Archiveing '"${ITEM}"'..."
+    "${RSYNC_BIN}" -az "${ITEM}" "${GLOB_OUTPUT}"
+    echo "Done!"
 }
 
 doBackup()
